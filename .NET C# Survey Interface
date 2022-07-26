@@ -1,0 +1,15 @@
+public interface ISurveysService
+    {
+        int Add(SurveyAddRequest model, int userId);
+        Paged<BaseSurvey> GetAll(int pageIndex, int pageSize);
+        Survey GetByIdDetails(int id);
+        BaseSurvey GetById(int id);
+        Paged<BaseSurvey> GetByUser(int pageIndex, int pageSize, int userId);
+        Paged<Survey> Search(int pageIndex, int pageSize, string query);
+        void Update(SurveyUpdateRequest model, int userId);
+        int Add(SurveyQuestionAddRequest model, int userId);
+        void Update(SurveyQuestionUpdateRequest model, int userId);
+        int Add(SQAOAddRequest model, int userId);
+        void Update(SQAOUpdateRequest model, int userId);
+        void Delete(int id);
+    }
