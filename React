@@ -1,0 +1,252 @@
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Button } from 'react-bootstrap';
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+import debug from 'sabio-debug';
+import './surveyquestions.css';
+import { addSurveyQuestion } from '../../../services/surveysService';
+import getLookUps from '../../../services/lookUpsService';
+import surveyQuestionValidationSchema from './sQValidationSchema';
+import { surveyProps } from '../schemas/propsSchema';
+import QAOOpenEnded from './QAOOpenEnded';
+import QAOCheckBoxes from './QAOCheckBoxes';
+import QAORadioOptions from './QAORadio';
+import QAOMatrixSelOne from './QAOMatrixSelOne';
+import QAOMatrixSelMany from './QAOMatrixSelMany';
+import QAOBinaryYN from './QAOBinaryYN';
+import QAOBinaryTF from './QAOBinaryTF';
+import QAOLikertFive from './QAOLikertScaleFive';
+import QAOLikertSeven from './QAOLikertScaleSeven';
+import QuestionSideBar from '../components/QuestionSideBar';
+
+const _logger = debug.extend('AddSurveyQuestionForm');
+
+const AddSurveyQuestionForm = (props) => {
+    const [formData] = useState({
+        surveyId: 0,
+        question: '',
+        helpText: '',
+        isRequired: '',
+        isMultipleRequired: '',
+        questionTypeId: 0,
+        statusId: 1,
+        sortOrder: 0,
+    });
+
+    const [showHelpText, setShowHelpText] = useState(false); // this one can stay its the add help text button
+    const [showComponent, setShowComponent] = useState([]);
+    const [lookUpOptions, setLookUpOptions] = useState({
+        lookUpData: [],
+    });
+
+    useEffect(() => {
+        _logger('use effect running');
+        getLookUps(['QuestionTypes']).then(onGetLookUpSuccess).catch(onGetLookUpError);
+    }, []);
+
+    const handleSubmit = (values) => {
+        _logger('handleSubmit', values);
+        let formValues = values;
+        if (values.isRequired === 'true') {
+            values.isRequired = true;
+        } else {
+            values.isRequired = false;
+        }
+        if (values.isMultipleRequired === 'true') {
+            values.isMultipleRequired = true;
+        } else {
+            values.isMultipleRequired = false;
+        }
+        formValues.sortOrder = 1;
+        formValues.surveyId = props.survey.id;
+        addSurveyQuestion(formValues)
+            .then(onAddQuestionSuccess)
+            .then(props.addQuestion(formValues))
+            .catch(onAddQuestionError);
+    };
+
+    const onAddQuestionSuccess = (response) => {
+        _logger('onAddQuestionSuccess', response.item);
+    };
+
+    const onAddQuestionError = (err) => _logger('onAddQuestionError', err);
+
+    const onGetLookUpSuccess = (response) => {
+        _logger('onGetLookUpSuccess', response.item.QuestionTypes);
+
+        setLookUpOptions((prevState) => {
+            const copy = { ...prevState };
+            copy.lookUpData = [...response.item.QuestionTypes];
+            return copy;
+        });
+    };
+
+    const onGetLookUpError = (err) => _logger('onAddQuestionError', err);
+
+    const mapQTypes = (qType, idx) => (
+        <option key={idx} value={qType.id}>
+            {qType.name}
+        </option>
+    );
+
+    const onShowText = () => {
+        setShowHelpText((prev) => !prev);
+    };
+
+    const setShowQtypeAnswer = (event) => {
+        let value = event.currentTarget.value;
+        _logger('values test', value);
+
+        if (value === '1') {
+            setShowComponent(<QAOOpenEnded />);
+        } else if (value === '2') {
+            setShowComponent(<QAORadioOptions />);
+        } else if (value === '3') {
+            setShowComponent(<QAOCheckBoxes />);
+        } else if (value === '4') {
+            setShowComponent(<QAOMatrixSelOne />);
+        } else if (value === '5') {
+            setShowComponent(<QAOMatrixSelMany />);
+        } else if (value === '8') {
+            setShowComponent(<QAOLikertFive />);
+        } else if (value === '9') {
+            setShowComponent(<QAOLikertSeven />);
+        } else if (value === '10') {
+            setShowComponent(<QAOBinaryYN />);
+        } else if (value === '11') {
+            setShowComponent(<QAOBinaryTF />);
+        }
+    };
+
+    return (
+        <React.Fragment>
+            <Row>
+                <QuestionSideBar questions={props.survey.questions} />
+                <Col>
+                    <Card>
+                        <Card.Body>
+                            <h4 className="mb-3 header-title">Submit New Survey Question</h4>
+                            <Formik
+                                enableReinitialize={true}
+                                validationSchema={surveyQuestionValidationSchema}
+                                initialValues={formData}
+                                onSubmit={handleSubmit}>
+                                {({ setFieldValue }) => (
+                                    <Form>
+                                        <Col sm={2}>
+                                            <label htmlFor="question">Survey Question</label>
+                                        </Col>
+                                        <Row className="mb-3 form-group">
+                                            <Col sm={9}>
+                                                <Field
+                                                    className="form-control"
+                                                    type="textarea"
+                                                    name="question"
+                                                    placeholder="Enter Survey Question"
+                                                />
+                                                <ErrorMessage
+                                                    style={{ color: 'red' }}
+                                                    name="surveyQuestion"
+                                                    component="div"
+                                                />
+                                            </Col>
+                                            <Row>
+                                                <ErrorMessage
+                                                    className="error-message"
+                                                    name="question"
+                                                    component="div"
+                                                />
+                                            </Row>
+                                            <Col sm={3} onClick={onShowText}>
+                                                <label htmlFor="helpText">Help Text</label>
+                                            </Col>
+                                        </Row>
+
+                                        {showHelpText && (
+                                            <div>
+                                                <Row className="mb-3 form-group">
+                                                    <Col>
+                                                        <Field
+                                                            className="form-control"
+                                                            type="textarea"
+                                                            name="helpText"
+                                                            placeholder="Enter Question Help Text"
+                                                        />
+                                                        <ErrorMessage name="helpText" component="div" />
+                                                    </Col>
+                                                </Row>
+                                            </div>
+                                        )}
+                                        <Row>
+                                            <Col sm={3}>
+                                                <label htmlFor="isRequired">Required</label>
+                                            </Col>
+                                            <Col sm={3}>
+                                                <label htmlFor="questionTypeId">Question Type</label>
+                                            </Col>
+                                            <Col sm={3}>
+                                                <label htmlFor="isMultipleRequired">Multiple</label>
+                                            </Col>
+                                        </Row>
+                                        <Row className="mb-3 form-group">
+                                            <Col sm={3}>
+                                                <Field
+                                                    className="form-select"
+                                                    component="select"
+                                                    name="isRequired"
+                                                    type="select">
+                                                    <option value={'0'}>Select Option</option>
+                                                    <option value={false}>No</option>
+                                                    <option value={true}>Yes</option>
+                                                </Field>
+                                            </Col>
+
+                                            <Col sm={3}>
+                                                <Field
+                                                    className="form-select"
+                                                    component="select"
+                                                    name="questionTypeId"
+                                                    onChange={(e) => {
+                                                        setShowQtypeAnswer(e);
+                                                        setFieldValue('questionTypeId', e.target.value);
+                                                    }}>
+                                                    <option value="0">Select</option>
+                                                    {lookUpOptions?.lookUpData.map((qType, idx) =>
+                                                        mapQTypes(qType, idx)
+                                                    )}
+                                                </Field>
+                                                <ErrorMessage
+                                                    style={{ color: 'red' }}
+                                                    name="surveyQuestion"
+                                                    component="div"
+                                                />
+                                            </Col>
+                                            <Col sm={3}>
+                                                <Field
+                                                    className="form-select"
+                                                    component="select"
+                                                    name="isMultipleRequired"
+                                                    type="select">
+                                                    <option value={'0'}>Select Option</option>
+                                                    <option value={false}>No</option>
+                                                    <option value={true}>Yes</option>
+                                                </Field>
+                                            </Col>
+                                            <Col sm={3}>
+                                                <Button variant="primary" type="submit">
+                                                    Submit
+                                                </Button>
+                                            </Col>
+                                        </Row>
+                                        <Row>{showComponent}</Row>
+                                    </Form>
+                                )}
+                            </Formik>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+        </React.Fragment>
+    );
+};
+AddSurveyQuestionForm.propTypes = surveyProps;
+export default AddSurveyQuestionForm;
