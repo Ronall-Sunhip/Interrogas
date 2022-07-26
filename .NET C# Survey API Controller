@@ -1,0 +1,305 @@
+[Route("api/surveys")]
+    [ApiController]
+    public class SurveyApiController : BaseApiController
+    {
+        private ISurveysService _service;
+        private IAuthenticationService<int> _authService;
+        private ILookUpService _lookUpService;
+        public SurveyApiController(ISurveysService service, ILookUpService lookUpService, IAuthenticationService<int> authService, ILogger<SurveyApiController> logger) : base(logger)
+        {
+            _service = service;
+            _authService = authService;
+            _lookUpService = lookUpService;
+        }
+        [HttpPost]
+        public ActionResult<ItemResponse<int>> Add(SurveyAddRequest model)
+        {
+            int userId = _authService.GetCurrentUserId();
+            ObjectResult result;
+            try
+            {
+                int id = _service.Add(model, userId);
+                ItemResponse<int> response = new ItemResponse<int> { Item = id };
+                result = Created201(response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex.ToString());
+                ErrorResponse response = new ErrorResponse(ex.Message);
+                result = StatusCode(500, response);
+            }
+            return result;
+        }
+        [HttpPut("{id:int}")]
+        public ActionResult<SuccessResponse> Update(SurveyUpdateRequest model)
+        {
+            int userId = _authService.GetCurrentUserId();
+            BaseResponse response;
+            int code = 200;
+            try
+            {
+                _service.Update(model, userId);
+                response = new SuccessResponse();
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+        [HttpGet]
+        public ActionResult<ItemResponse<Paged<BaseSurvey>>> GetPaged(int pageIndex, int pageSize)
+        {
+            int code = 200;
+            BaseResponse response;
+            try
+            {
+                Paged<BaseSurvey> paged = _service.GetAll(pageIndex, pageSize);
+                if (paged == null)
+                {
+                    code = 404;
+                    response = new ErrorResponse("Application Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<Paged<BaseSurvey>> { Item = paged };
+                }
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                Logger.LogError(ex.ToString());
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+
+        [HttpGet("details/{id:int}")]
+        [AllowAnonymous]
+        public ActionResult<ItemResponse<Survey>> GetByIdDetails(int id)
+        {
+            int code = 200;
+            BaseResponse response;
+            try
+            {
+                Survey survey = _service.GetByIdDetails(id);
+                if (survey == null)
+                {
+                    code = 404;
+                    response = new ErrorResponse("Application Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<Survey> { Item = survey };
+                }
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                Logger.LogError(ex.ToString());
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+
+        [HttpGet("{id:int}")]
+        public ActionResult<ItemResponse<BaseSurvey>> GetById(int id)
+        {
+            int code = 200;
+            BaseResponse response;
+            try
+            {
+                BaseSurvey survey = _service.GetById(id);
+                if (survey == null)
+                {
+                    code = 404;
+                    response = new ErrorResponse("Application Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<BaseSurvey> { Item = survey };
+                }
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                Logger.LogError(ex.ToString());
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+        [HttpGet]
+        [Route("current")]
+        public ActionResult<ItemResponse<Paged<BaseSurvey>>> GetByCurrent(int pageIndex, int pageSize)
+        {
+            int id = _authService.GetCurrentUserId();
+            int code = 200;
+            BaseResponse response;
+            try
+            {
+                Paged<BaseSurvey> paged = _service.GetByUser(pageIndex, pageSize, id);
+                if (paged == null)
+                {
+                    code = 404;
+                    response = new ErrorResponse("Application Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<Paged<BaseSurvey>> { Item = paged };
+                }
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                Logger.LogError(ex.ToString());
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+        [HttpGet("search")]
+        public ActionResult<ItemResponse<Paged<Survey>>> Search(int pageIndex, int pageSize, string query)
+        {
+            int code = 200;
+            BaseResponse response;
+            try
+            {
+                Paged<Survey> paged = _service.Search(pageIndex, pageSize, query);
+                if (paged == null)
+                {
+                    code = 404;
+                    response = new ErrorResponse("Application Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<Paged<Survey>> { Item = paged };
+                }
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                Logger.LogError(ex.ToString());
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+        [HttpPost("questions")]
+        public ActionResult<ItemResponse<int>> Create(SurveyQuestionAddRequest model)
+        {
+            ObjectResult result = null;
+            try
+            {
+                int userId = _authService.GetCurrentUserId();
+                int id = _service.Add(model, userId);
+                ItemResponse<int> response = new ItemResponse<int> { Item = id };
+                result = Created201(response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex.ToString());
+                ErrorResponse response = new ErrorResponse(ex.Message);
+                result = StatusCode(500, response);
+            }
+            return result;
+        }
+        [HttpPut("questions/{id:int}")]
+        public ActionResult<ItemResponse<int>> Update(SurveyQuestionUpdateRequest model)
+        {
+            int code = 200;
+            BaseResponse response = null;
+            try
+            {
+                int userId = _authService.GetCurrentUserId();
+                _service.Update(model, userId);
+                response = new SuccessResponse();
+            }
+            catch (Exception ex)
+            {
+                base.Logger.LogError(ex.ToString());
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+        [HttpPost("questions/answers/options")]
+        public ActionResult<ItemResponse<int>> Create(SQAOAddRequest model)
+        {
+            ObjectResult result = null;
+            try
+            {
+                int userId = _authService.GetCurrentUserId();
+                int id = _service.Add(model, userId);
+                ItemResponse<int> response = new ItemResponse<int> { Item = id };
+                result = Created201(response);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex.ToString());
+                ErrorResponse response = new ErrorResponse(ex.Message);
+                result = StatusCode(500, response);
+            }
+            return result;
+        }
+        [HttpPut("questions/answers/options/{id:int}")]
+        public ActionResult<ItemResponse<int>> Update(SQAOUpdateRequest model)
+        {
+            int code = 200;
+            BaseResponse response = null;
+            try
+            {
+                int userId = _authService.GetCurrentUserId();
+                _service.Update(model, userId);
+                response = new SuccessResponse();
+            }
+            catch (Exception ex)
+            {
+                base.Logger.LogError(ex.ToString());
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+        [HttpDelete("questions/answers/options/{id:int}")]
+        public ActionResult Delete(int id)
+        {
+            int code = 200;
+            BaseResponse response = null;
+            try
+            {
+                _service.Delete(id);
+                response = new SuccessResponse();
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+        [HttpPost("questions/types")]
+        public ActionResult<ItemResponse<List<LookUp>>> Get(string tableName)
+        {
+            int code = 200;
+            BaseResponse response;
+            try
+            {
+                List<LookUp> lookUp = _lookUpService.GetLookUp(tableName);
+                if (lookUp == null)
+                {
+                    code = 404;
+                    response = new ErrorResponse("Application Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<List<LookUp>> { Item = lookUp };
+                }
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                Logger.LogError(ex.ToString());
+                response = new ErrorResponse(ex.Message);
+            }
+            return StatusCode(code, response);
+        }
+    }
