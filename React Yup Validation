@@ -1,0 +1,13 @@
+import * as Yup from 'yup';
+
+const surveyQuestionValidationSchema = Yup.object().shape({
+    surveyId: Yup.number().required('Is Required'),
+    question: Yup.string().min(1).max(500).required('Is Required'),
+    helpText: Yup.string().min(0).max(255),
+    isRequired: Yup.boolean(),
+    isMultipleRequired: Yup.boolean(),
+    questionTypeId: Yup.number().required('Is Required'),
+    statusId: Yup.number().required('Is Required'),
+});
+
+export default surveyQuestionValidationSchema;
