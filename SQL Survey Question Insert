@@ -1,0 +1,68 @@
+ALTER PROC [dbo].[SurveyQuestions_Insert]
+
+	 @SurveyId int
+    ,@UserId int
+    ,@Question nvarchar(500)
+    ,@HelpText nvarchar(255)
+    ,@IsRequired bit
+    ,@IsMultipleRequired bit
+    ,@QuestionTypeId int
+    ,@StatusId int = NULL
+    ,@SortOrder int
+	,@Id int OUTPUT
+
+AS
+/*-------TEST CODE-------
+	DECLARE @Id int = 0
+		   ,@SurveyId int = 4
+           ,@UserId int = 1
+           ,@Question nvarchar(500) = 'What Policy do you want to see implemented more?'
+           ,@HelpText nvarchar(255) = 'This is help text test.'
+           ,@IsRequired bit = 1
+           ,@IsMultipleRequired bit = 1
+           ,@QuestionTypeId int = 1
+           ,@StatusId int = 1
+           ,@SortOrder int = 0
+
+	EXECUTE dbo.SurveyQuestions_Insert
+		    @SurveyId
+           ,@UserId
+           ,@Question
+           ,@HelpText
+           ,@IsRequired
+           ,@IsMultipleRequired
+           ,@QuestionTypeId
+           ,@StatusId
+           ,@SortOrder
+		   ,@Id OUTPUT
+
+	SELECT * FROM dbo.SurveyQuestions
+*/
+BEGIN
+
+	INSERT INTO [dbo].[SurveyQuestions]
+           ([SurveyId]
+           ,[UserId]
+           ,[Question]
+           ,[HelpText]
+           ,[IsRequired]
+           ,[IsMultipleRequired]
+           ,[QuestionTypeId]
+           ,[StatusId]
+           ,[SortOrder])
+
+     VALUES
+           (@SurveyId
+           ,@UserId
+           ,@Question
+           ,@HelpText
+           ,@IsRequired
+           ,@IsMultipleRequired
+           ,@QuestionTypeId
+           ,@StatusId
+           ,@SortOrder)
+
+	SET @Id = SCOPE_IDENTITY()
+
+
+END
