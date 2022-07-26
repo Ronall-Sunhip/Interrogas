@@ -1,0 +1,61 @@
+ALTER PROC [dbo].[SurveyQuestions_Update]
+
+				   @SurveyId int
+				  ,@UserId int
+				  ,@Question nvarchar(500)
+				  ,@HelpText nvarchar(255)
+				  ,@IsRequired bit
+				  ,@isMultipleRequired bit
+				  ,@QuestionTypeId int
+				  ,@StatusId int
+				  ,@SortOrder int
+				  ,@Id int
+
+AS
+/*---------TEST CODE---------
+	   DECLARE @Id int = 7
+			  ,@SurveyId int = 1
+			  ,@UserId int = 1
+			  ,@Question nvarchar(500) = 'Test Question UPDATE 2'
+			  ,@HelpText nvarchar(255) = 'TEST HELP TEXT ONE FOR UPDATE'
+			  ,@IsRequired bit = 1
+			  ,@isMultipleRequired bit = 1
+			  ,@QuestionTypeId int = 1
+			  ,@StatusId int = 1
+			  ,@SortOrder int = 1
+	
+	EXECUTE dbo.SurveyQuestions_Update
+
+			 @SurveyId 
+		    ,@UserId 
+			,@Question 
+			,@HelpText 
+			,@IsRequired 
+			,@isMultipleRequired 
+			,@QuestionTypeId 
+			,@StatusId 
+			,@SortOrder 
+			,@Id 
+
+	SELECT * FROM dbo.SurveyQuestions
+*/
+BEGIN
+
+	DECLARE @DateModified datetime2 = GETUTCDATE()
+
+	UPDATE [dbo].[SurveyQuestions]
+
+   SET [SurveyId] = @SurveyId
+      ,[UserId] = @UserId
+      ,[Question] = @Question
+      ,[HelpText] = @HelpText
+      ,[IsRequired] = @IsRequired
+      ,[isMultipleRequired] = @isMultipleRequired
+      ,[QuestionTypeId] = @QuestionTypeId
+      ,[StatusId] = @StatusId
+      ,[SortOrder] = @SortOrder
+      ,[DateModified] = @DateModified
+
+	WHERE @Id = Id
+
+END
